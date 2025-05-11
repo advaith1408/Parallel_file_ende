@@ -5,3 +5,4 @@ parallel. This project taps into that hardware advantage by dividing a file into
 encrypting each chunk using a separate thread. As a result, we see a noticeable improvement
 in speed, especially on multi-core systems.
 
+
