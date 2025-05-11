@@ -1,0 +1,36 @@
+CPU SCHEDULING
+CPU scheduling is the basis of multiprogrammed operating systems. By switching the CPU among processes, the operating system can make the computer more productive.
+Basic Concepts
+In a single-processor system, only one process can run at a time. Others must wait until the CPU is free and can be rescheduled. The objective of multiprogramming is to have some process running at all times, to maximize CPU utilization.
+In multiprogramming several processes are kept in memory at one time. The objective of multiprogramming is to have some process running at all times, to maximize CPU utilization. When one process has to wait, the operating system takes the CPU away from that process and gives the CPU to another process. This pattern continues. Every time one process has to wait, another process can take over use of the CPU.
+CPU –I/O Burst Cycle
+CPU burst: The time a process uses the CPU until it starts waiting for input or is interrupted by another process.
+I/O burst: The time a process waits for input/output
+The success of CPU scheduling depends on an observed property of processes: process execution consists of a cycle of CPU execution and I/O wait. Processes alternate between these two states. Process execution begins with a CPU burst. That is followed by an I/O burst, which is followed by another CPU burst, then another I/O burst, and so on. Eventually, the final CPU burst ends with a system request to terminate execution.
+CPU Schedule
+Whenever the CPU becomes idle, the operating system must select one of the processes in the ready queue to be executed. Conceptually, however, all the processes in the ready queue are lined up waiting for a chance to run on the CPU. The records in the queues are generally process control blocks (PCBs) of the processes.
+The selection process is carried out by the short-term scheduler, or CPU scheduler. The scheduler selects a process from the processes in memory that are ready to execute and allocates the CPU to that process. The ready queue is not necessarily a first-in, first-out (FIFO) queue. A ready queue can be implemented as a FIFO queue, a priority queue, a tree, or simply an unordered linked list
+CPU-Scheduling decisions may take place under the following four circumstances:
+1. When a process switches from the running state to the waiting state (for example, as the result of an I/O request or an invocation of wait () for the termination of a child process).
+2. When a process switches from the running state to the ready state (for example, when an interrupt occurs)
+3. When a process switches from the waiting state to the ready state (for example, at completion of I/O)
+4. When a process terminates.
+For situations 1 and 4, there is no choice in terms of scheduling. A new process (if one exists in the ready queue) must be selected for execution. There is a choice, however, for situations 2 and 3.
+When scheduling takes place only under circumstances 1 and 4, we say that the scheduling scheme is nonpreemptive or cooperative. Otherwise, it is preemptive.
+Dispatcher
+Another component involved in the CPU-scheduling function is the dispatcher.
+The dispatcher is the module that gives control of the CPU to the process selected by the short-term scheduler.
+This function involves the following:
+• Switching context
+• Switching to user mode
+• Jumping to the proper location in the user program to restart that program.
+The dispatcher should be as fast as possible, since it is invoked during every process switch. The time it takes for the dispatcher to stop one process and start another process is known as the dispatch latency.
+Scheduling Criteria
+Different CPU-scheduling algorithms have different properties, and the choice of a particular algorithm is based on the following criteria.
+• CPU Utilization. We want to keep the CPU as busy as possible. Conceptually, CPU utilization can range from 0 to 100 percent. For a lightly loaded system CPU utilization is 40% and for a heavily loaded system it is 90%).
+• Throughput. Number of processes that are completed per unit time is called throughput. For long processes, this rate may be one process per hour; for short transactions, it may be ten processes per second.
+• Turnaround time. How long it takes to execute that process. The interval from the time of submission of a process to the time of completion is the turnaround time. Turnaround time is the sum of the periods spent waiting to get into memory, waiting in the ready queue, executing on the CPU, and doing I/O.
+• Waiting time. Time spent waiting in the ready queue.
+Note: The CPU-scheduling algorithm does not affect the amount of time during which a process executes or does I/O. It affects only the amount of time that a process spends waiting in the ready queue.
+• Response time. Time from the submission of a request until the first response is produced. This measure, called response time, is the time it takes to start responding, not the time it takes to output the response. The turnaround time is generally limited by the speed of the output device.
+It is desirable to maximize CPU utilization and throughput and to minimize turnaround time, waiting time, and response time.

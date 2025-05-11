@@ -1,0 +1,117 @@
+Thread
+
+A web browser might have one thread display images or text while another thread retrieves data from the network.
+ 
+A word processor may have a thread for displaying graphics, another thread for responding to keystrokes from the user, and a third thread for performing spelling and grammar checking in the background.
+ 
+One solution is to have the server run as a single process that accepts multiple requests.
+ 
+When the server receives a request, it creates a separate process to service that request. In fact, this process-creation method was in common use before threads became popular. Process creation is time consuming and resource intensive, however.
+ 
+If the new process will perform the same tasks as the existing process, why incur all that overhead? It is generally more efficient to use one process that contains multiple threads. This is illustrated in Figure 4.2. This allows the server to service several concurrent requests.
+
+Finally, most operating-system kernels are now multithreaded. Several threads operate in the kernel, and each thread performs a specific task, such as managing devices, managing memory, or interrupt handling.
+ 
+Advantages of Multithreaded Programming
+The benefits of multithreaded programming can be broken down into four major categories:
+1. Responsiveness. Multithreading may allow a program to continue running even if part of it is blocked or is performing a lengthy operation, thereby increasing responsiveness to the user.
+2. Resource sharing. Threads share the memory and the resources of the process to which they belong by default. The benefit of sharing code and data is that it allows sharing of same address space.
+3. Economy. As threads share the resources of the process to which they belong, it is more economical to create and context-switch threads. In Solaris, for example, creating a process is about thirty times slower than is creating a thread, and context switching is about five times slower.
+4. Scalability. The benefits of multithreading can be even greater in a multiprocessor architecture, where threads may be running in parallel on different processing cores.
+ 
+Multithreading Models
+Support for threads may be provided either at the user level, for user threads, or by the kernel, for kernel threads.
+User threads are supported above the kernel and are managed without kernel support, whereas kernel threads are supported and managed directly by the operating system.
+ 
+Ultimately, a relationship must exist between user threads and kernel threads. There are three common ways of establishing such a relationship: the many-to-one model, the one-to-one model, and the many-to- many models.
+ 
+1. Many-to-One Model
+The many-to-one model maps many user-level threads to one kernel thread.
+Thread management is done by the thread library in user space. The entire process will block if a thread makes a blocking system call. Also, because only one thread can access the kernel at a time, multiple threads are unable to run in parallel on multicore systems.
+
+2. One-to-One Model
+The one-to-one model maps each user thread to a kernel thread. It allows another thread to run when a thread makes a blocking system call. It also allows multiple threads to run in parallel on multiprocessors. The only drawback to this model is that creating a user thread requires creating the corresponding kernel thread.
+ 
+3. Many-to-Many Model
+The many-to-many model multiplexes many user-level threads to a smaller or equal number of kernel threads. The number of kernel threads may be specific to either a particular application or a particular machine.
+
+Let’s consider the effect of the above designs on concurrency. The many- to-one model allows the developer to create as many user threads but, it does not result in true concurrency, because the kernel can schedule only one thread at a time. The one-to-one model allows greater concurrency.
+ 
+The many-to-many model suffers from neither of these shortcomings: developers can create as many user threads as necessary, and the corresponding kernel threads can run in parallel on a multiprocessor. Also, when a thread performs a blocking system call, the kernel can schedule another thread for execution.
+ 
+One variation on the many-to-many model still multiplexes many user- level threads to a smaller or equal number of kernel threads but also allows a user-level thread to be bound to a kernel thread. This variation is sometimes referred to as the two-level model .
+
+Thread Libraries
+A thread library provides the programmer with an API for creating and managing threads.
+There are two primary ways of implementing a thread library.
+▪ The first approach is to provide a library entirely in user space with no kernel support. All code and data structures for the library exist in user space. This means that invoking a function in the library results in a local function call in user space and not a system call.
+▪ The second approach is to implement a kernel-level library supported directly by the operating system. In this case, code and data structures for the library exist in kernel space. Invoking a function in the API for the library typically results in a system call to the kernel.
+ 
+Three main thread libraries are in use today: POSIX Pthreads, Windows, and Java. Pthreads, the threads extension of the POSIX standard, may be provided as either a user-level or a kernel-level library. The Windows thread library is a kernel-level library available on Windows systems. The Java thread API allows threads to be created and managed directly in Java programs. This means that on Windows systems, Java threads are typically implemented using the Windows API; UNIX and Linux systems often use Pthreads.
+ 
+Threading Issues
+Issues to consider in designing multithreaded programs.
+ 
+The fork () and exec () System Calls
+The semantics of the fork() and exec() system calls change in a multithreaded program.
+The fork () system call is used to create a separate, duplicate process. .If one thread in a program calls fork(), does the new process duplicate all threads, or single-threaded?
+Some UNIX systems have chosen to have two versions of fork(), one that duplicates all threads and another that duplicates only the thread that invoked the fork() system call. Which of the two versions of fork() to use depends on the application.
+If a thread invokes the exec() system call, the program specified in the parameter to exec() will replace the entire process— including all threads.
+If exec() is called immediately after forking, then duplicating all threads is unnecessary, as the program specified in the parameters to exec() will replace the process. In this instance, duplicating only the calling thread is appropriate.
+ 
+Signal Handling
+A signal is used to notify a process that a particular event has occurred. A signal may be received either synchronously or asynchronously, depending on the source of and the reason for the event being signaled. All signals, whether synchronous or asynchronous, follow the same pattern:
+ 
+1. A signal is generated by the occurrence of a particular event.
+2. The signal is delivered to a process.
+3. Once delivered, the signal must be handled.
+ 
+Examples of synchronous signal include illegal memory access and divi- sion by 0. If a running program performs either of these actions, a signal is generated. Synchronous signals are delivered to the same process that performed the operation that caused the signal (that is the reason they are considered synchronous).
+When a signal is generated by an event external to a running process, that process receives the signal asynchronously. Examples of such signals include terminating a process with specific keystrokes (such as <control><C>) and having a timer expire. Typically, an asynchronous signal is sent to another process.
+ 
+A signal may be handled by one of two possible handlers:
+1. A default signal handler
+2. A user-defined signal handler
+ 
+Every signal has a default signal handler that the kernel runs when handling that signal. This default action can be overridden by a user-defined signal handler that is called to handle the signal. Signals are handled in different ways.
+However, delivering signals is more complicated in multithreaded programs, where a process may have several threads. Where, then, should a signal be delivered?
+In general, the following options exist:
+1. Deliver the signal to the thread to which the signal applies.
+2. Deliver the signal to every thread in the process.
+3. Deliver the signal to certain threads in the process.
+4. Assign a specific thread to receive all signals for the process.
+ 
+Thread Cancellation
+Thread cancellation involves terminating a thread before it has completed. For example, if multiple threads are concurrently searching through a database and one thread returns the result, the remaining threads might be canceled.
+ 
+A thread that is to be canceled is referred to as the target thread. Cancellation of a target thread may occur in two different scenarios:
+1. Asynchronous cancellation. One thread immediately terminates the target thread.
+2. Deferred cancellation. The target thread periodically checks whether it should terminate, allowing it an opportunity to terminate itself in an orderly fashion.
+ 
+The difficulty with cancellation occurs in situations where resources have been allocated to a canceled thread or where a thread is canceled while in the midst of updating data it is sharing with other threads.
+ 
+Thread-Local Storage
+ 
+Threads belonging to a process share the data of the process. Indeed, this data sharing provides one of the benefits of multithreaded programming. However, in some circumstances, each thread might need its own copy of certain data. We will call such data thread-local storage (or TLS.)  
+ 
+Scheduler Activations
+A final issue to be considered with multithreaded programs concerns com- munication between the kernel and the thread library.
+This coordination allows the number of kernel threads to be dynamically adjusted to help ensure the best performance.
+A data structure known as a lightweight process, or LWP is used between the user and kernel threads. The LWP appears to be a virtual processor on which the application can schedule a user thread to run. Each LWP is attached to a kernel thread, and it is kernel threads that the operating system schedules to run on physical processors. If a kernel thread blocks (such as while waiting for an I/O operation to complete), the LWP blocks as well. Up the chain, the user-level thread attached to the LWP also blocks.
+
+One scheme for communication between the user-thread library and the kernel is known as scheduler activation. It works as follows: The kernel provides an application with a set of virtual processors (LWPs), and the application can schedule user threads onto an available virtual processor.
+
+Thread Pools
+ 
+A multithreaded web server, whenever a request, it creates a separate thread to service the request.
+Whereas creating a separate thread is certainly superior to creating a separate process. But
+The first issue concerns the amount of time required to create the thread.
+The second the number of threads concurrently active in the system.
+Unlimited threads could exhaust system resources, such as CPU time or memory.
+One solution to this problem is to use a thread pool.
+The general idea behind a thread pool is to create a number of threads at process startup and place them into a pool, where they sit and wait for work. When a server receives a request, it awakens a thread from this pool—if one is available—and passes it the request for service. Once the thread completes its service, it returns to the pool and awaits more work. If the pool contains no available thread, the server waits until one becomes free.
+Thread pools offer these benefits:
+1. Servicing a request with an existing thread is faster than waiting to create a thread.
+2. A thread pool limits the number of threads that exist at any one point.
+3. Separating the task to be performed from the mechanics of creating the task allows us to use different strategies for running the task.
+The number of threads in the pool can be set heuristically based on factors such as the number of CPUs in the system, the amount of physical memory, and the expected number of concurrent client requests.
